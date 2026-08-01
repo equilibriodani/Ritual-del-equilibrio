@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Espacio de Equilibrio - Daniela</title>
+    
+    <!-- React & React DOM via CDN -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    
+    <!-- Babel standalone para compilar JSX en navegador -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <!-- Tailwind CSS v3 via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Configuración personalizada de Tailwind -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary: '#8FAF8B',   /* Verde suave */
+                            secondary: '#A05C63', /* Rosa viejo / terracota tenue */
+                            accent: '#C8833E',    /* Ámbar calidez */
+                            bg: '#F8F5EF',        /* Crema / Lino tenue */
+                            text: '#3E3E3E',      /* Gris carbón suave */
+                            card: '#FFFFFF',
+                            muted: '#6B7280'
+                        }
+                    },
+                    fontFamily: {
+                        serif: ['Playfair Display', 'Georgia', 'serif'],
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts: Serif elegante y Sans limpia -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Plus+Jakarta+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <style>
+        body {
+            background-color: #F8F5EF;
+            color: #3E3E3E;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Transiciones suaves inter-sección */
+        .fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Respiro de animación en temporizador */
+        @keyframes pulseCalm {
+            0%, 100% { transform: scale(1); opacity: 0.85; }
+            50% { transform: scale(1.12); opacity: 1; }
+        }
+
+        .animate-pulse-calm {
+            animation: pulseCalm 4s ease-in-out infinite;
+        }
+
+        /* Ocultar scrollbar pero permitir desplazamiento */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col selection:bg-brand-primary/20 selection:text-brand-text">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // --- ICONOS COMPONIBLES SUAVES (Lucide SVG Helper) ---
+        const Icon = ({ name, size = 22, className = "" }) => {
+            useEffect(() => {
+                if (window.lucide) {
+                    window.lucide.createIcons();
+                }
+            }, [name]);
+            return <i data-lucide={name} className={`w-[${size}px] h-[${size}px] ${className}`}></i>;
+        };
+
+        // --- TOAST NOTIFICACIÓN FLOTANTE ---
+        const Toast = ({ message, onClose }) => {
+            if (!message) return null;
+            return (
+                <div class="fixed bottom-24 left-1/2 transform -translate-x-1/2 z-50 bg-stone-800 text-stone-100 text-xs px-5 py-3 rounded-full shadow-lg flex items-center space-x-3 fade-in border border-stone-700">
+                    <span class="w-2 h-2 rounded-full bg-brand-primary"></span>
+                    <span class="font-medium tracking-wide">{message}</span>
+                </div>
+            );
+        };
+
+        // --- COMPONENTE HEADER ---
+        const Header = ({ currentTab, onNavigate }) => {
+            return (
+                <header class="pt-8 pb-4 px-6 max-w-2xl mx-auto w-full text-center">
+                    <div class="inline-flex items-center space-x-2 text-brand-primary mb-2 opacity-90 cursor-pointer" onClick={() => onNavigate('home')}>
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                            <path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2z" />
+                            <path d="M12 6v12M6 12h12" strokeLinecap="round" />
+                        </svg>
+                    </div>
+                    <h1 class="text-3xl md:text-4xl font-serif text-brand-text font-normal tracking-wide">
+                        Mi Espacio de Equilibrio
+                    </h1>
+                    <p class="text-xs md:text-sm text-brand-muted font-serif italic mt-2 tracking-wide">
+                        "Volver a vos comienza con una respiración."
+                    </p>
+                </header>
+            );
+        };
+
+        // --- COMPONENTE HOME / PANTALLA INICIAL ---
+        const HomeScreen = ({ onNavigate }) => {
+            const cards = [
+                {
+                    id: 'escaner',
+                    title: 'Escuchar mi cuerpo',
+                    desc: 'Reconocer tensiones y encontrar alivio guiado.',
+                    icon: 'activity',
+                    bgColor: 'bg-[#F2F5F1]',
+                    accentColor: 'text-brand-primary'
+                },
+                {
+                    id: 'botiquin',
+                    title: 'Explorar aromas',
+                    desc: 'Aceites esenciales y el circuito de la calma.',
+                    icon: 'droplet',
+                    bgColor: 'bg-[#F7F2F3]',
+                    accentColor: 'text-brand-secondary'
+                },
+                {
+                    id: 'ritual',
+                    title: 'Crear ritual',
+                    desc: 'Diseña una pausa adaptada a lo que necesitas hoy.',
+                    icon: 'sparkles',
+                    bgColor: 'bg-[#FAF4ED]',
+                    accentColor: 'text-brand-accent'
+                },
+                {
+                    id: 'bitacora',
+                    title: 'Mi espacio',
+                    desc: 'Tu diario libre de registro y kit personal de calma.',
+                    icon: 'book-open',
+                    bgColor: 'bg-stone-100',
+                    accentColor: 'text-stone-600'
+                }
+            ];
+
+            return (
+                <div class="fade-in space-y-8 max-w-xl mx-auto px-4 py-4">
+                    <div class="text-center space-y-1">
+                        <span class="text-xs font-medium text-brand-secondary tracking-widest uppercase">Pausa & Presencia</span>
+                        <h2 class="text-2xl font-serif text-brand-text">¿Cómo querés acompañarte hoy?</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {cards.map(card => (
+                            <button
+                                key={card.id}
+                                onClick={() => onNavigate(card.id)}
+                                class={`${card.bgColor} p-6 rounded-2xl text-left border border-black/5 shadow-xs hover:shadow-md transition-all transform hover:-translate-y-0.5 flex flex-col justify-between h-44 group cursor-pointer`}
+                            >
+                                <div class="flex justify-between items-start w-full">
+                                    <div class={`p-3 rounded-xl bg-white/80 shadow-xs ${card.accentColor}`}>
+                                        <Icon name={card.icon} size={22} />
+                                    </div>
+                                    <span class="text-stone-300 group-hover:text-brand-text transition-colors text-lg">→</span>
+                                </div>
+                                <div>
+                                    <h3 class="font-serif text-lg text-brand-text font-medium group-hover:text-brand-primary transition-colors">{card.title}</h3>
+                                    <p class="text-xs text-brand-muted mt-1 leading-relaxed">{card.desc}</p>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-black/5 shadow-xs flex items-center justify-between">
+                        <div>
+                            <h4 class="font-serif text-base text-brand-text">Biblioteca & Prácticas</h4>
+                            <p class="text-xs text-brand-muted mt-0.5">Meditaciones en audio y sesión de Yoga 10 min.</p>
+                        </div>
+                        <button 
+                            onClick={() => onNavigate('biblioteca')}
+                            class="px-4 py-2 bg-brand-bg text-brand-text text-xs rounded-xl border border-stone-200 hover:border-brand-primary transition-all font-medium"
+                        >
+                            Explorar
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- COMPONENTE ESCÁNER CORPORAL & TENSIÓN ---
+        const BodyScanner = ({ onSelectZone, selectedZone, tensionLevel, setTensionLevel, onNavigateTimer }) => {
+            const zones = [
+                {
+                    id: 'cuello',
+                    title: 'Cuello y Hombros',
+                    desc: 'Acumulación de cargas cotidianas y sobreexigencia.',
+                    icon: 'feather',
+                    detail: 'Sensación de peso constante. Tu cuerpo te pide soltar responsabilidades que no te corresponden en este instante.',
+                    recommendation: 'Usa Roll-on de Árnica + Enebro (puedes sumar Óleo 31 para potenciar). Acompaña con rotaciones suaves de hombros sin forzar el rango.'
+                },
+                {
+                    id: 'mandibula',
+                    title: 'Mandíbula Apretada',
+                    desc: 'Tensión contenida, irritabilidad o estrés silencioso.',
+                    icon: 'smile',
+                    detail: 'Refleja resistencia no expresada verbalmente o hiperactividad mental durante el día o la noche.',
+                    recommendation: 'Aplica 1 gota de Lavanda en la yema de tus dedos. Haz círculos muy suaves en las articulaciones temporomandibulares mientras mantienes los dientes separados.'
+                },
+                {
+                    id: 'mente',
+                    title: 'Mente Abrumada',
+                    desc: 'Pensamientos en bucle y saturación de estímulos.',
+                    icon: 'wind',
+                    detail: 'Dispersión y fatiga cognitiva. Dificultad para mantener el foco o encontrar silencio interior.',
+                    recommendation: 'Inhala directamente del frasco o usa difusor con Romero (para enfocar y aclarar) o Bergamota (para aliviar el exceso de peso emocional).'
+                },
+                {
+                    id: 'desconexion',
+                    title: 'Sensación de Desconexión',
+                    desc: 'Vivir en automático, aceleración o falta de presencia.',
+                    icon: 'compass',
+                    detail: 'Sensación de andar corriendo sin habitar verdaderamente el cuerpo ni el momento actual.',
+                    recommendation: 'Realiza una pausa inmediata: Apoya ambos pies firmemente en el suelo, descalzo si es posible. Inhala profundamente reconociendo el peso de tus pies sobre la tierra.'
+                }
+            ];
+
+            const tensionLabels = ['Muy bajo', 'Bajo', 'Medio', 'Alto', 'Muy alto'];
+
+            return (
+                <div class="fade-in space-y-8 max-w-xl mx-auto px-4 py-4">
+                    <div class="text-center space-y-1">
+                        <span class="text-xs font-medium text-brand-primary tracking-widest uppercase">Escuchar el cuerpo</span>
+                        <h2 class="text-2xl font-serif text-brand-text">¿Dónde reside la tensión hoy?</h2>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-black/5 shadow-xs space-y-4">
+                        <div class="flex justify-between items-center">
+                            <label class="text-xs font-medium text-brand-text uppercase tracking-wider">Nivel de tensión percibido</label>
+                            <span class="text-xs font-semibold px-3 py-1 bg-brand-bg rounded-full text-brand-secondary border border-stone-200">
+                                {tensionLabels[tensionLevel - 1]}
+                            </span>
+                        </div>
+                        <input
+                            type="range"
+                            min="1"
+                            max="5"
+                            value={tensionLevel}
+                            onChange={(e) => setTensionLevel(Number(e.target.value))}
+                            class="w-full h-2 bg-stone-100 rounded-lg appearance-none cursor-pointer accent-brand-primary"
+                        />
+                        <div class="flex justify-between text-[10px] text-brand-muted px-1">
+                            <span>Sutil</span>
+                            <span>Moderado</span>
+                            <span>Intenso</span>
+                        </div>
+                    </div>
+
+                    <div class="space-y-4">
+                        {zones.map((zone) => {
+                            const isSelected = selectedZone?.id === zone.id;
+                            return (
+                                <div key={zone.id} class="bg-white rounded-2xl border border-black/5 shadow-xs overflow-hidden transition-all duration-300">
+                                    <button
+                                        onClick={() => onSelectZone(isSelected ? null : zone)}
+                                        class="w-full p-6 text-left flex items-start justify-between cursor-pointer focus:outline-none"
+                                    >
+                                        <div class="flex items-start space-x-4">
+                                            <div class={`p-3 rounded-xl ${isSelected ? 'bg-brand-primary text-white' : 'bg-brand-bg text-brand-primary'} transition-colors`}>
+                                                <Icon name={zone.icon} size={22} />
+                                            </div>
+                                            <div>
+                                                <h3 class="font-serif text-lg text-brand-text font-medium">{zone.title}</h3>
+                                                <p class="text-xs text-brand-muted mt-1 leading-relaxed">{zone.desc}</p>
+                                            </div>
+                                        </div>
+                                        <span class={`text-sm text-brand-muted transition-transform duration-300 ${isSelected ? 'rotate-180' : ''}`}>
+                                            ↓
+                                        </span>
+                                    </button>
+
+                                    {isSelected && (
+                                        <div class="px-6 pb-6 pt-2 bg-stone-50/50 border-t border-stone-100 space-y-4 fade-in">
+                                            <p class="text-xs text-brand-text italic leading-relaxed">
+                                                "{zone.detail}"
+                                            </p>
+                                            <div class="p-4 bg-white rounded-xl border border-brand-primary/20 space-y-2">
+                                                <span class="text-[10px] uppercase tracking-wider font-semibold text-brand-primary">Sugerencia de Alivio</span>
+                                                <p class="text-xs text-brand-text leading-relaxed">
+                                                    {zone.recommendation}
+                                                </p>
+                                            </div>
+                                            <div class="pt-2 flex gap-2">
+                                                <button 
+                                                    onClick={() => onNavigateTimer(2)}
+                                                    class="w-full py-3 bg-brand-primary text-white text-xs font-medium rounded-xl hover:opacity-90 transition-all shadow-xs flex items-center justify-center space-x-2"
+                                                >
+                                                    <Icon name="clock" size={16} />
+                                                    <span>Iniciar Pausa Guiada (2 min)</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- COMPONENTE BOTIQUÍN AROMÁTICO & ACEITES (PARCHE V3.2.2 INTEGRADO) ---
+        const EssentialOils = ({ onSelectOilToRitual, onNavigateTimer }) => {
+            const oils = [
+                {
+                    id: 'romero',
+                    name: 'Romero',
+                    tag: 'Claridad & Enfoque',
+                    desc: 'Su aroma fresco y herbal despeja la mente fatigada, devuelve la lucidez y corta la dispersión.',
+                    tip: 'Tip de Dani: Añade un par de gotas a tu shampoo diario para iniciar la mañana enfocado.'
+                },
+                {
+                    id: 'bergamota',
+                    name: 'Bergamota',
+                    tag: 'Mi Favorito Matutino',
+                    desc: 'Fresco, cítrico y luminoso. Eleva el ánimo suavemente y transmite una cálida sensación de serenidad.',
+                    tip: 'Inhálalo al despertar antes de consultar pantallas para fijar tu intención del día.'
+                },
+                {
+                    id: 'enebro',
+                    name: 'Enebro',
+                    tag: 'Movimiento & Ligereza',
+                    desc: 'Profundamente reconfortante para soltar contracturas musculares y revitalizar extremidades pesadas.',
+                    tip: 'Ideal para automasaje en piernas después de caminatas o entrenamientos.'
+                },
+                {
+                    id: 'arnica',
+                    name: 'Árnica',
+                    tag: 'Cuidado Físico',
+                    desc: 'El gran aliado para reconfortar zonas con tensión focalizada o desgaste físico acumulado.',
+                    tip: 'Combínalo como base líquida neutra para aplicar tus mezclas.'
+                },
+                {
+                    id: 'lavanda',
+                    name: 'Lavanda',
+                    tag: 'Calma • Descanso • Meditación',
+                    desc: 'Favorece la relajación profunda, ayuda a disminuir el estrés y acompaña momentos de descanso, meditación o ansiedad.',
+                    tip: '¿Cuándo elegirla?: Antes de dormir, durante una práctica de meditación, en momentos de ansiedad o sobrecarga emocional, y para acompañar ejercicios de respiración consciente.'
+                }
+            ];
+
+            return (
+                <div class="fade-in space-y-8 max-w-xl mx-auto px-4 py-4">
+                    <div class="text-center space-y-1">
+                        <span class="text-xs font-medium text-brand-secondary tracking-widest uppercase">Botiquín Natural</span>
+                        <h2 class="text-2xl font-serif text-brand-text">Aliados Aromáticos</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {oils.map(oil => (
+                            <div key={oil.id} class="bg-white p-6 rounded-2xl border border-black/5 shadow-xs flex flex-col justify-between space-y-4">
+                                <div class="space-y-2">
+                                    <div class="flex justify-between items-start">
+                                        <h3 class="font-serif text-lg text-brand-text font-medium">{oil.name}</h3>
+                                        <span class="text-[10px] font-medium px-2.5 py-1 bg-brand-bg text-brand-secondary rounded-full border border-stone-200">
+                                            {oil.tag}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-brand-muted leading-relaxed">{oil.desc}</p>
+                                    <p class="text-[11px] text-brand-primary italic pt-1">{oil.tip}</p>
+                                </div>
+
+                                <button
+                                    onClick={() => onSelectOilToRitual(oil.name)}
+                                    class="w-full py-2.5 bg-brand-bg hover:bg-brand-primary hover:text-white text-brand-text text-xs font-medium rounded-xl border border-stone-200 transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+                                >
+                                    <span>Quiero usar este</span>
+                                    <span>→</span>
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* TARJETA PRÁCTICA REEMPLAZADA (V3.2.2) */}
+                    <div class="bg-white p-6 rounded-2xl border border-black/5 shadow-xs space-y-5">
+                        <div class="space-y-1">
+                            <div class="flex items-center space-x-1.5">
+                                <span class="text-base">🌿</span>
+                                <h3 class="font-serif text-lg text-brand-text font-medium">Tarjeta Práctica</h3>
+                            </div>
+                            <h4 class="font-serif text-sm text-brand-secondary font-medium">Roll-on Bienestar en Movimiento</h4>
+                            <p class="text-xs text-brand-muted leading-relaxed pt-1">
+                                Una mezcla simple para acompañar músculos tensos y momentos de sobrecarga física.
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 py-2 border-y border-stone-100">
+                            <div class="p-3 bg-brand-bg/60 rounded-xl space-y-0.5">
+                                <span class="text-xs font-semibold text-brand-text block">🧴 Base</span>
+                                <span class="text-xs text-brand-muted block">Árnica</span>
+                            </div>
+                            <div class="p-3 bg-brand-bg/60 rounded-xl space-y-0.5">
+                                <span class="text-xs font-semibold text-brand-text block">💚 Agregar</span>
+                                <span class="text-xs text-brand-muted block">5 gotas de Enebro</span>
+                            </div>
+                            <div class="p-3 bg-brand-bg/60 rounded-xl space-y-0.5">
+                                <span class="text-xs font-semibold text-brand-text block">✨ Opcional</span>
+                                <span class="text-xs text-brand-muted block">2 gotas de Óleo 31</span>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <span class="text-xs font-semibold text-brand-text block">📍 Aplicar en</span>
+                            <div class="grid grid-cols-2 gap-1.5 text-xs text-brand-muted">
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="text-brand-primary">•</span>
+                                    <span>cuello</span>
+                                </div>
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="text-brand-primary">•</span>
+                                    <span>hombros</span>
+                                </div>
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="text-brand-primary">•</span>
+                                    <span>espalda</span>
+                                </div>
+                                <div class="flex items-center space-x-1.5">
+                                    <span class="text-brand-primary">•</span>
+                                    <span>piernas cansadas</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-3.5 bg-brand-bg/80 rounded-xl border border-stone-200/60 space-y-1">
+                            <span class="text-xs font-semibold text-brand-accent block">💡 Tip de Dani</span>
+                            <p class="text-xs text-brand-muted leading-relaxed">
+                                Podés reutilizar un envase roll-on limpio (¡incluso uno de desodorante como suelo hacer yo!). Es una forma simple de tener siempre tu mezcla preparada para acompañarte durante el día.
+                            </p>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="w-full py-2.5 bg-brand-bg hover:bg-stone-200 text-brand-text text-xs font-medium rounded-xl border border-stone-200 transition-all cursor-pointer"
+                        >
+                            Guardar receta
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- COMPONENTE TEMPORIZADOR A PANTALLA COMPLETA ---
+        const FullscreenTimer = ({ initialMinutes = 2, onClose }) => {
+            const [secondsLeft, setSecondsLeft] = useState(initialMinutes * 60);
+            const [isActive, setIsActive] = useState(false);
+            const [isFinished, setIsFinished] = useState(false);
+
+            useEffect(() => {
+                let interval = null;
+                if (isActive && secondsLeft > 0) {
+                    interval = setInterval(() => {
+                        setSecondsLeft(prev => prev - 1);
+                    }, 1000);
+                } else if (secondsLeft === 0 && isActive) {
+                    setIsActive(false);
+                    setIsFinished(true);
+                }
+                return () => clearInterval(interval);
+            }, [isActive, secondsLeft]);
+
+            const formatTime = (secs) => {
+                const m = Math.floor(secs / 60).toString().padStart(2, '0');
+                const s = (secs % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            };
+
+            const getPhaseMessage = () => {
+                const total = initialMinutes * 60;
+                const passed = total - secondsLeft;
+
+                if (passed < 5) return "Paso 1: Inhala suavemente la esencia seleccionada...";
+                if (passed < 60) return "Las moléculas aromáticas viajan al sistema límbico enviando serenidad al cerebro.";
+                if (secondsLeft > 20) return "Tu sistema nervioso procesa el aroma. Exhala soltando hombros y mandíbula.";
+                return "Cerrando el circuito de asimilación profunda...";
+            };
+
+            return (
+                <div class="fixed inset-0 z-50 bg-[#F8F5EF] flex flex-col justify-between p-6 md:p-12 fade-in">
+                    <div class="flex justify-end">
+                        <button onClick={onClose} class="p-3 text-brand-muted hover:text-brand-text text-xs uppercase tracking-widest font-medium">
+                            ✕ Cerrar
+                        </button>
+                    </div>
+
+                    {!isFinished ? (
+                        <div class="flex flex-col items-center justify-center space-y-8 my-auto text-center">
+                            <span class="text-xs font-medium text-brand-primary uppercase tracking-widest">
+                                Pausa Aromática Guiada
+                            </span>
+
+                            <div class="relative flex items-center justify-center w-64 h-64">
+                                <div class={`absolute inset-0 rounded-full bg-brand-primary/10 ${isActive ? 'animate-pulse-calm' : ''}`}></div>
+                                <div class="absolute inset-4 rounded-full border border-brand-primary/30 flex flex-col items-center justify-center bg-white/60 backdrop-blur-xs shadow-xs">
+                                    <span class="text-5xl font-serif text-brand-text tracking-tighter">
+                                        {formatTime(secondsLeft)}
+                                    </span>
+                                    <span class="text-[10px] text-brand-muted mt-2 tracking-widest uppercase">
+                                        {isActive ? 'Inhalá • Exhalá' : 'Pausa en espera'}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <p class="text-xs text-brand-muted max-w-xs h-12 flex items-center justify-center italic">
+                                {isActive ? getPhaseMessage() : 'Prepará tu aroma favorito y presiona iniciar.'}
+                            </p>
+
+                            <div class="flex space-x-3">
+                                <button
+                                    onClick={() => setIsActive(!isActive)}
+                                    class="px-8 py-3.5 bg-brand-primary text-white text-xs font-medium rounded-full shadow-xs hover:opacity-90 transition-all"
+                                >
+                                    {isActive ? 'Pausar' : 'Iniciar Pausa'}
+                                </button>
+                                <button
+                                    onClick={() => { setIsActive(false); setSecondsLeft(initialMinutes * 60); }}
+                                    class="px-6 py-3.5 bg-stone-100 text-brand-muted text-xs font-medium rounded-full hover:bg-stone-200 transition-all"
+                                >
+                                    Reiniciar
+                                </button>
+                            </div>
+                        </div>
+                    ) : (
+                        <div class="flex flex-col items-center justify-center space-y-6 my-auto text-center max-w-sm mx-auto fade-in">
+                            <div class="w-16 h-16 bg-brand-primary/10 text-brand-primary rounded-full flex items-center justify-center text-2xl">
+                                ✨
+                            </div>
+                            <h3 class="text-2xl font-serif text-brand-text">Pausa Completada</h3>
+                            <p class="text-sm text-brand-muted leading-relaxed italic">
+                                "Regalate unos segundos para notar cómo se siente tu cuerpo ahora en comparación con el momento en que iniciaste."
+                            </p>
+                            <button
+                                onClick={onClose}
+                                class="px-8 py-3.5 bg-brand-primary text-white text-xs font-medium rounded-full shadow-xs hover:opacity-90 transition-all"
+                            >
+                                Volver a Mi Espacio
+                            </button>
+                        </div>
+                    )}
+
+                    <div class="text-center text-[11px] text-brand-muted">
+                        El Ritual del Equilibrio • Dani
+                    </div>
+                </div>
+            );
+        };
+
+        // --- COMPONENTE CREADOR DE RITUAL ASISTIDO ---
+        const RitualBuilder = ({ initialOil = '', onComplete, showToast }) => {
+            const [step, setStep] = useState(1);
+            const [ritual, setRitual] = useState({
+                oil: initialOil || 'Lavanda',
+                moment: 'Mañana',
+                duration: '5 minutos',
+                actions: ['Inhalación profunda']
+            });
+
+            const moments = ['Mañana', 'Tarde', 'Noche', 'Antes de dormir'];
+            const durations = ['2 minutos', '5 minutos', '10 minutos', '15 minutos'];
+            const oilsList = ['Romero', 'Bergamota', 'Enebro', 'Árnica', 'Lavanda', 'Óleo 31'];
+            const availableActions = [
+                'Inhalación profunda',
+                'Automasaje en mandíbula',
+                'Estiramiento de cuello',
+                'Pies sobre la tierra',
+                'Escribir en bitácora'
+            ];
+
+            const toggleAction = (act) => {
+                setRitual(prev => ({
+                    ...prev,
+                    actions: prev.actions.includes(act)
+                        ? prev.actions.filter(a => a !== act)
+                        : [...prev.actions, act]
+                }));
+            };
+
+            const handleSave = () => {
+                const saved = JSON.parse(localStorage.getItem('my_rituals') || '[]');
+                saved.push({ ...ritual, id: Date.now(), date: new Date().toLocaleDateString() });
+                localStorage.setItem('my_rituals', JSON.stringify(saved));
+                showToast("Tu ritual personalizado fue guardado con éxito ✨");
+                onComplete();
+            };
+
+            return (
+                <div class="fade-in space-y-8 max-w-xl mx-auto px-4 py-4">
+                    <div class="text-center space-y-1">
+                        <span class="text-xs font-medium text-brand-accent tracking-widest uppercase">Diseñador Personal</span>
+                        <h2 class="text-2xl font-serif text-brand-text">Crear mi Ritual</h2>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-black/5 shadow-xs space-y-6">
+                        {/* Selector de Pasos */}
+                        <div class="flex justify-between items-center border-b border-stone-100 pb-4">
+                            {[1, 2, 3].map((s) => (
+                                <button
+                                    key={s}
+                                    onClick={() => setStep(s)}
+                                    class={`flex items-center space-x-2 text-xs font-medium ${step === s ? 'text-brand-accent border-b-2 border-brand-accent pb-1' : 'text-stone-400'}`}
+                                >
+                                    <span class={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] ${step === s ? 'bg-brand-accent text-white' : 'bg-stone-100'}`}>{s}</span>
+                                    <span>{s === 1 ? 'Aceite & Momento' : s === 2 ? 'Acciones' : 'Resumen'}</span>
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Paso 1: Aceite y Momento */}
+                        {step === 1 && (
+                            <div class="space-y-6 fade-in">
+                                <div>
+                                    <label class="block text-xs font-medium text-brand-text uppercase tracking-wider mb-2">Selecciona un aroma base</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        {oilsList.map(o => (
+                                            <button
+                                                key={o}
+                                                onClick={() => setRitual({...ritual, oil: o})}
+                                                class={`p-3 text-xs rounded-xl border text-left transition-all ${ritual.oil === o ? 'border-brand-accent bg-brand-accent/10 text-brand-accent font-medium' : 'border-stone-200 text-brand-text hover:border-stone-300'}`}
+                                            >
+                                                {o}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-brand-text uppercase tracking-wider mb-2">Momento del día</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        {moments.map(m => (
+                                            <button
+                                                key={m}
+                                                onClick={() => setRitual({...ritual, moment: m})}
+                                                class={`p-3 text-xs rounded-xl border text-left transition-all ${ritual.moment === m ? 'border-brand-accent bg-brand-accent/10 text-brand-accent font-medium' : 'border-stone-200 text-brand-text'}`}
+                                            >
+                                                {m}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-medium text-brand-text uppercase tracking-wider mb-2">Duración de la pausa</label>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        {durations.map(d => (
+                                            <button
+                                                key={d}
+                                                onClick={() => setRitual({...ritual, duration: d})}
+                                                class={`p-3 text-xs rounded-xl border text-left transition-all ${ritual.duration === d ? 'border-brand-accent bg-brand-accent/10 text-brand-accent font-medium' : 'border-stone-200 text-brand-text'}`}
+                                            >
+                                                {d}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <button onClick={() => setStep(2)} class="w-full py-3 bg-brand-accent text-white text-xs font-medium rounded-xl hover:opacity-90 transition-all">
+                                    Siguiente: Elegir acciones →
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Paso 2: Acciones */}
+                        {step === 2 && (
+                            <div class="space-y-6 fade-in">
+                                <label class="block text-xs font-medium text-brand-text uppercase tracking-wider">¿Qué ejercicios incluirás?</label>
+                                <div class="space-y-2">
+                                    {availableActions.map(act => {
+                                        const checked = ritual.actions.includes(act);
+                                        return (
+                                            <button
+                                                key={act}
+                                                onClick={() => toggleAction(act)}
+                                                class={`w-full p-3.5 rounded-xl border text-left text-xs flex justify-between items-center transition-all ${checked ? 'border-brand-accent bg-brand-accent/10 text-brand-text font-medium' : 'border-stone-200 text-stone-600'}`}
+                                            >
+                                                <span>{act}</span>
+                                                <span>{checked ? '✓' : '+'}</span>
+                                            </button>
+                                        );
+                                    })}
+                                </div>
+
+                                <div class="flex space-x-2 pt-2">
+                                    <button onClick={() => setStep(1)} class="w-1/3 py-3 border border-stone-200 text-brand-muted text-xs font-medium rounded-xl">
+                                        Atrás
+                                    </button>
+                                    <button onClick={() => setStep(3)} class="w-2/3 py-3 bg-brand-accent text-white text-xs font-medium rounded-xl hover:opacity-90">
+                                        Ver Resumen →
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Paso 3: Resumen y Guardar */}
+                        {step === 3 && (
+                            <div class="space-y-6 fade-in text-center">
+                                <div class="p-4 bg-brand-bg rounded-xl text-left space-y-3 border border-stone-200">
+                                    <h4 class="font-serif text-brand-accent font-medium text-base">Tu Ritual de Equilibrio</h4>
+                                    <p class="text-xs text-brand-text"><strong class="font-semibold">Aceite:</strong> {ritual.oil}</p>
+                                    <p class="text-xs text-brand-text"><strong class="font-semibold">Momento:</strong> {ritual.moment} ({ritual.duration})</p>
+                                    <div class="text-xs text-brand-text">
+                                        <strong class="font-semibold">Acciones:</strong>
+                                        <ul class="list-disc list-inside mt-1 text-brand-muted space-y-0.5">
+                                            {ritual.actions.map(a => <li key={a}>{a}</li>)}
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="flex space-x-2">
+                                    <button onClick={() => setStep(2)} class="w-1/3 py-3 border border-stone-200 text-brand-muted text-xs font-medium rounded-xl">
+                                        Atrás
+                                    </button>
+                                    <button onClick={handleSave} class="w-2/3 py-3 bg-brand-accent text-white text-xs font-medium rounded-xl hover:opacity-90">
+                                        Guardar mi Ritual ✨
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        // --- COMPONENTE BITÁCORA / MI ESPACIO ---
+        const Journal = ({ showToast }) => {
+            const [entry, setEntry] = useState('');
+            const [savedEntries, setSavedEntries] = useState([]);
+            const [savedRituals, setSavedRituals] = useState([]);
+
+            useEffect(() => {
+                const logs = JSON.parse(localStorage.getItem('my_journal') || '[]');
+                const rits = JSON.parse(localStorage.getItem('my_rituals') || '[]');
+                setSavedEntries(logs);
+                setSavedRituals(rits);
+            }, []);
+
+            const handleSaveEntry = () => {
+                if (!entry.trim()) return;
+                const updated = [{ id: Date.now(), text: entry, date: new Date().toLocaleDateString() }, ...savedEntries];
+                setSavedEntries(updated);
+                localStorage.setItem('my_journal', JSON.stringify(updated));
+                setEntry('');
+                showToast("Entrada guardada en tu bitácora personal.");
+            };
+
+            return (
+                <div class="fade-in space-y-8 max-w-xl mx-auto px-4 py-4">
+                    <div class="text-center space-y-1">
+                        <span class="text-xs font-medium text-stone-500 tracking-widest uppercase">Registro Libre</span>
+                        <h2 class="text-2xl font-serif text-brand-text">Mi Bitácora de Bienestar</h2>
+                    </div>
+
+                    <div class="bg-white p-6 rounded-2xl border border-black/5 shadow-xs space-y-4">
+                        <textarea
+                            value={entry}
+                            onChange={(e) => setEntry(e.target.value)}
+                            placeholder="Escribe lo que sientes o lo que tu cuerpo necesita expresar hoy..."
+                            rows="4"
+                            class="w-full p-4 text-xs text-brand-text bg-brand-bg/50 rounded-xl border border-stone-200 focus:outline-none focus:border-brand-primary"
+                        ></textarea>
+                        <button
+                            onClick={handleSaveEntry}
+                            class="w-full py-3 bg-stone-800 text-white text-xs font-medium rounded-xl hover:bg-stone-900 transition-all"
+                        >
+                            Guardar Reflexión
+                        </button>
+                    </div>
+
+                    {/* Mis Ritual Guardados */}
+                    {savedRituals.length > 0 && (
+                        <div class="space-y-3">
+                            <h3 class="text-xs font-semibold text-brand-text uppercase tracking-wider">Mis Rituales Guardados</h3>
+                            <div class="space-y-2">
+                                {savedRituals.map(r => (
+                                    <div key={r.id} class="bg-white p-4 rounded-xl border border-stone-100 text-xs flex justify-between items-center">
+                                        <div>
+                                            <p class="font-medium text-brand-text">{r.moment} - {r.oil}</p>
+                                            <p class="text-stone-400 text-[10px]">{r.duration} • {r.actions.join(', ')}</p>
+                                        </div>
+                                        <span class="text-[10px] text-stone-300">{r.date}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Historico de Entradas */}
+                    {savedEntries.length > 0 && (
+                        <div class="space-y-3">
+                            <h3 class="text-xs font-semibold text-brand-text uppercase tracking-wider">Reflexiones Previas</h3>
+                            <div class="space-y-2">
+                                {savedEntries.map(item => (
+                                    <div key={item.id} class="bg-white p-4 rounded-xl border border-stone-100 text-xs space-y-1">
+                                        <div class="flex justify-between text-stone-400 text-[10px]">
+                                            <span>Entrada</span>
+                                            <span>{item.date}</span>
+                                        </div>
+                                        <p class="text-brand-text leading-relaxed">{item.text}</p>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        // --- COMPONENTE BIBLIOTECA ---
+        const Library = () => {
+            const meditations = [
+                {
+                    id: 'reset',
+                    title: 'RESET',
+                    desc: 'Cuando necesitás empezar de nuevo. Una invitación a detenerte, respirar y volver al presente.',
+                    url: 'https://youtu.be/cSir_Dseb0o'
+                },
+                {
+                    id: 'despertar',
+                    title: 'DESPERTAR CONSCIENTE',
+                    desc: 'Una práctica suave para comenzar el día con claridad, intención y conexión.',
+                    url: 'https://youtu.be/h505V3Zyx4w?si=YJQmmKIjyOJeqEsa'
+                },
+                {
+                    id: 'volver-cuerpo',
+                    title: 'VOLVER AL CUERPO',
+                    desc: 'Cuando la mente está demasiado ocupada. Una meditación para regresar al cuerpo y recuperar la presencia.',
+                    url: 'https://youtu.be/kson-VZ7yL0'
+                },
+                {
+                    id: 'soltar-dia',
+                    title: 'SOLTAR EL DÍA',
+                    desc: 'Ideal para cerrar la jornada, aflojar tensiones y prepararte para descansar.',
+                    url: 'https://youtu.be/BBOZQ6-F7-M'
+                },
+                {
+                    id: 'calma-confianza',
+                    title: 'CALMA Y CONFIANZA',
+                    desc: 'Una práctica para recuperar la calma, fortalecer la confianza y encontrar sostén emocional.',
+                    url: 'https://youtu.be/PObw_S5ZbeM'
+                },
+                {
+                    id: 'volver-a-vos',
+                    title: 'VOLVER A VOS',
+                    desc: 'Una meditación de integración para regresar a tu centro, a tu respiración y a vos.',
+                    url: 'https://youtu.be/RCMJ246nrFY'
+                }
+            ];
+
+            return (
+                <div class="fade-in space-y-8 max-w-xl mx-auto px-4 py-4">
+                    <div class="text-center space-y-2">
+                        <span class="text-xs font-medium text-brand-primary tracking-widest uppercase">Recursos Guiados</span>
+                        <h2 class="text-2xl font-serif text-brand-text">Biblioteca de Bienestar</h2>
+                        <p class="text-xs text-brand-muted leading-relaxed max-w-md mx-auto pt-1">
+                            Un espacio para volver a vos. Las meditaciones que encontrarás en esta sección fueron creadas para acompañarte en distintos momentos del día y diferentes estados emocionales. No hace falta escucharlas en orden: elegí la que más necesites según cómo te estés sintiendo. A veces necesitaremos energía, otras calma, presencia o simplemente una pausa.
+                        </p>
+                    </div>
+
+                    {/* SECCIÓN 1: Meditaciones Guiadas */}
+                    <div class="space-y-4">
+                        <h3 class="font-serif text-lg text-brand-text font-medium flex items-center space-x-2">
+                            <span>🎧</span>
+                            <span>Meditaciones Guiadas</span>
+                        </h3>
+                        <div class="space-y-3">
+                            {meditations.map((item) => (
+                                <div key={item.id} class="p-4 bg-brand-bg rounded-xl border border-stone-200 space-y-2">
+                                    <h4 class="font-serif text-base text-brand-text font-medium">{item.title}</h4>
+                                    <p class="text-xs text-brand-muted leading-relaxed">
+                                        {item.desc}
+                                    </p>
+                                    <a
+                                        href={item.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="inline-block mt-2 px-4 py-2 bg-brand-primary text-white text-xs rounded-lg font-medium hover:opacity-90 transition-all cursor-pointer"
+                                    >
+                                        Escuchar meditación
+                                    </a>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* SECCIÓN 2: Práctica Guiada de Yoga */}
+                    <div class="space-y-4 pt-2">
+                        <h3 class="font-serif text-lg text-brand-text font-medium flex items-center space-x-2">
+                            <span>🧘</span>
+                            <span>Práctica Guiada de Yoga</span>
+                        </h3>
+                        <div class="p-4 bg-brand-bg rounded-xl border border-stone-200 space-y-2">
+                            <h4 class="font-serif text-base text-brand-text font-medium">Yoga 10 minutos – Cuello y Espalda</h4>
+                            <p class="text-xs text-brand-muted leading-relaxed">
+                                Esta práctica fue creada para esos días donde sentimos el cuerpo cargado y pensamos que no tenemos tiempo. Porque a veces diez minutos son suficientes para relajar la tensión diaria y cambiar completamente cómo nos sentimos.
+                            </p>
+                            <a
+                                href="https://youtu.be/IbYBsZnYz9U"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                class="inline-block mt-2 px-4 py-2 bg-brand-secondary text-white text-xs rounded-lg font-medium hover:opacity-90 transition-all cursor-pointer"
+                            >
+                                Ver práctica
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- COMPONENTE PRINCIPAL APP CON NAVEGACIÓN ---
+        const App = () => {
+            const [currentTab, setCurrentTab] = useState('home');
+            const [selectedZone, setSelectedZone] = useState(null);
+            const [tensionLevel, setTensionLevel] = useState(3);
+            const [selectedOilForRitual, setSelectedOilForRitual] = useState('');
+            const [timerMinutes, setTimerMinutes] = useState(2);
+            const [showTimer, setShowTimer] = useState(false);
+            const [toastMessage, setToastMessage] = useState('');
+
+            const showToast = (msg) => {
+                setToastMessage(msg);
+                setTimeout(() => setToastMessage(''), 3000);
+            };
+
+            const handleNavigateTimer = (min = 2) => {
+                setTimerMinutes(min);
+                setShowTimer(true);
+            };
+
+            const handleSelectOilToRitual = (oilName) => {
+                setSelectedOilForRitual(oilName);
+                setCurrentTab('ritual');
+                showToast(`Iniciando ritual con ${oilName}`);
+            };
+
+            return (
+                <div class="min-h-screen pb-28 flex flex-col justify-between">
+                    <div>
+                        <Header currentTab={currentTab} onNavigate={setCurrentTab} />
+
+                        <main class="max-w-2xl mx-auto w-full">
+                            {currentTab === 'home' && <HomeScreen onNavigate={setCurrentTab} />}
+                            {currentTab === 'escaner' && (
+                                <BodyScanner 
+                                    selectedZone={selectedZone} 
+                                    onSelectZone={setSelectedZone}
+                                    tensionLevel={tensionLevel}
+                                    setTensionLevel={setTensionLevel}
+                                    onNavigateTimer={handleNavigateTimer}
+                                />
+                            )}
+                            {currentTab === 'botiquin' && (
+                                <EssentialOils 
+                                    onSelectOilToRitual={handleSelectOilToRitual}
+                                    onNavigateTimer={handleNavigateTimer}
+                                />
+                            )}
+                            {currentTab === 'ritual' && (
+                                <RitualBuilder 
+                                    initialOil={selectedOilForRitual} 
+                                    onComplete={() => setCurrentTab('bitacora')}
+                                    showToast={showToast}
+                                />
+                            )}
+                            {currentTab === 'bitacora' && <Journal showToast={showToast} />}
+                            {currentTab === 'biblioteca' && <Library />}
+                        </main>
+                    </div>
+
+                    {/* Barra de Navegación Inferior Flotante */}
+                    <nav class="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-stone-200/80 px-6 py-3 z-40">
+                        <div class="max-w-md mx-auto flex justify-around items-center">
+                            {[
+                                { id: 'home', label: 'Inicio', icon: 'home' },
+                                { id: 'escaner', label: 'Cuerpo', icon: 'activity' },
+                                { id: 'botiquin', label: 'Aromas', icon: 'droplet' },
+                                { id: 'ritual', label: 'Ritual', icon: 'sparkles' },
+                                { id: 'bitacora', label: 'Diario', icon: 'book-open' }
+                            ].map(item => (
+                                <button
+                                    key={item.id}
+                                    onClick={() => setCurrentTab(item.id)}
+                                    class={`flex flex-col items-center space-y-1 transition-all ${currentTab === item.id ? 'text-brand-primary font-semibold' : 'text-stone-400 hover:text-stone-600'}`}
+                                >
+                                    <Icon name={item.icon} size={20} />
+                                    <span class="text-[10px] tracking-tight">{item.label}</span>
+                                </button>
+                            ))}
+                        </div>
+                    </nav>
+
+                    {/* Temporizador Modal en Pantalla Completa */}
+                    {showTimer && (
+                        <FullscreenTimer 
+                            initialMinutes={timerMinutes} 
+                            onClose={() => setShowTimer(false)} 
+                        />
+                    )}
+
+                    {/* Notificaciones Toast */}
+                    <Toast message={toastMessage} onClose={() => setToastMessage('')} />
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
