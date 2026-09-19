@@ -151,7 +151,7 @@
                     title: 'Explorar aromas',
                     desc: 'Aceites esenciales y el circuito de la calma.',
                     icon: 'droplet',
-                    bgColor: 'bg-[#F7F2F3]',
+                    bgColor: 'bg-[#F1F6F1]',
                     accentColor: 'text-brand-secondary'
                 },
                 {
@@ -200,18 +200,25 @@
                         ))}
                     </div>
 
-                    <div class="bg-white p-6 rounded-2xl border border-black/5 shadow-xs flex items-center justify-between">
-                        <div>
-                            <h4 class="font-serif text-base text-brand-text">Biblioteca & Prácticas</h4>
-                            <p class="text-xs text-brand-muted mt-0.5">Meditaciones en audio y sesión de Yoga 10 min.</p>
+                    <button
+                        onClick={() => onNavigate('biblioteca')}
+                        class="w-full bg-[#F1F6F1] p-6 rounded-2xl border border-brand-secondary/20 shadow-xs hover:shadow-md transition-all transform hover:-translate-y-0.5 text-left flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 group cursor-pointer"
+                    >
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 rounded-full bg-white/80 text-brand-secondary flex items-center justify-center text-xl shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                                <Icon name="book-open" size={24} />
+                            </div>
+                            <div class="space-y-1">
+                                <h3 class="font-serif text-xl text-brand-text font-medium leading-tight group-hover:text-brand-primary transition-colors">Biblioteca & Prácticas</h3>
+                                <p class="text-xs text-brand-muted leading-relaxed">
+                                    Meditaciones en audio y sesión de Yoga 10 min.
+                                </p>
+                            </div>
                         </div>
-                        <button 
-                            onClick={() => onNavigate('biblioteca')}
-                            class="px-4 py-2 bg-brand-bg text-brand-text text-xs rounded-xl border border-stone-200 hover:border-brand-primary transition-all font-medium"
-                        >
-                            Explorar
-                        </button>
-                    </div>
+                        <div class="px-4 py-2 bg-white/80 text-brand-text text-xs rounded-xl border border-brand-secondary/20 group-hover:border-brand-secondary transition-all font-medium whitespace-nowrap self-end sm:self-center">
+                            Explorar →
+                        </div>
+                    </button>
                 </div>
             );
         };
@@ -339,43 +346,21 @@
 
         // --- COMPONENTE BOTIQUÍN AROMÁTICO & ACEITES (PARCHE V3.2.2 INTEGRADO) ---
         const EssentialOils = ({ onSelectOilToRitual, onNavigateTimer }) => {
+            const [openRecipe, setOpenRecipe] = React.useState(null);
+
             const oils = [
-                {
-                    id: 'romero',
-                    name: 'Romero',
-                    tag: 'Claridad & Enfoque',
-                    desc: 'Su aroma fresco y herbal despeja la mente fatigada, devuelve la lucidez y corta la dispersión.',
-                    tip: 'Tip de Dani: Añade un par de gotas a tu shampoo diario para iniciar la mañana enfocado.'
-                },
-                {
-                    id: 'bergamota',
-                    name: 'Bergamota',
-                    tag: 'Mi Favorito Matutino',
-                    desc: 'Fresco, cítrico y luminoso. Eleva el ánimo suavemente y transmite una cálida sensación de serenidad.',
-                    tip: 'Inhálalo al despertar antes de consultar pantallas para fijar tu intención del día.'
-                },
-                {
-                    id: 'enebro',
-                    name: 'Enebro',
-                    tag: 'Movimiento & Ligereza',
-                    desc: 'Profundamente reconfortante para soltar contracturas musculares y revitalizar extremidades pesadas.',
-                    tip: 'Ideal para automasaje en piernas después de caminatas o entrenamientos.'
-                },
-                {
-                    id: 'arnica',
-                    name: 'Árnica',
-                    tag: 'Cuidado Físico',
-                    desc: 'El gran aliado para reconfortar zonas con tensión focalizada o desgaste físico acumulado.',
-                    tip: 'Combínalo como base líquida neutra para aplicar tus mezclas.'
-                },
-                {
-                    id: 'lavanda',
-                    name: 'Lavanda',
-                    tag: 'Calma • Descanso • Meditación',
-                    desc: 'Favorece la relajación profunda, ayuda a disminuir el estrés y acompaña momentos de descanso, meditación o ansiedad.',
-                    tip: '¿Cuándo elegirla?: Antes de dormir, durante una práctica de meditación, en momentos de ansiedad o sobrecarga emocional, y para acompañar ejercicios de respiración consciente.'
-                }
+                { id: 'romero', name: 'Romero', tag: 'Claridad & Enfoque', desc: 'Su aroma fresco y herbal despeja la mente fatigada, devuelve la lucidez y corta la dispersión.', tip: 'Tip de Dani: Añade un par de gotas a tu shampoo diario para iniciar la mañana enfocado.' },
+                { id: 'bergamota', name: 'Bergamota', tag: 'Mi Favorito Matutino', desc: 'Fresco, cítrico y luminoso. Eleva el ánimo suavemente y transmite una cálida sensación de serenidad.', tip: 'Inhálalo al despertar antes de consultar pantallas para fijar tu intención del día.' },
+                { id: 'enebro', name: 'Enebro', tag: 'Movimiento & Ligereza', desc: 'Profundamente reconfortante para soltar contracturas musculares y revitalizar extremidades pesadas.', tip: 'Ideal para automasaje en piernas después de caminatas o entrenamientos.' },
+                { id: 'arnica', name: 'Árnica', tag: 'Cuidado Físico', desc: 'El gran aliado para reconfortar zonas con tensión focalizada o desgaste físico acumulado.', tip: 'Combínalo como base líquida neutra para aplicar tus mezclas.' },
+                { id: 'lavanda', name: 'Lavanda', tag: 'Calma • Descanso • Meditación', desc: 'Favorece la relajación profunda, ayuda a disminuir el estrés y acompaña momentos de descanso, meditación o ansiedad.', tip: '¿Cuándo elegirla?: Antes de dormir, durante una práctica de meditación, en momentos de ansiedad o sobrecarga emocional, y para acompañar ejercicios de respiración consciente.' },
+                { id: 'eucalipto', name: 'Eucalipto', tag: 'Respiración & Frescura', desc: 'Su aroma fresco, limpio y potente puede acompañar momentos en los que necesitás renovar el aire, despejarte y crear una sensación de frescura.', tip: 'Tip de Dani: Podés incorporarlo en momentos de pausa o cuando buscás una sensación de frescura y renovación.' },
+                { id: 'neroli', name: 'Neroli', tag: 'Calma & Bienestar', desc: 'Un aroma floral, suave y delicado que puede acompañar momentos de calma, pausa y conexión personal.', tip: 'Tip de Dani: Probalo durante una pausa, antes de una práctica de respiración o como parte de un ritual de descanso.' }
             ];
+
+            const toggleRecipe = (recipeId) => {
+                setOpenRecipe(prev => prev === recipeId ? null : recipeId);
+            };
 
             return (
                 <div class="fade-in space-y-8 max-w-xl mx-auto px-4 py-4">
@@ -409,69 +394,136 @@
                         ))}
                     </div>
 
-                    {/* TARJETA PRÁCTICA REEMPLAZADA (V3.2.2) */}
-                    <div class="bg-white p-6 rounded-2xl border border-black/5 shadow-xs space-y-5">
-                        <div class="space-y-1">
-                            <div class="flex items-center space-x-1.5">
-                                <span class="text-base">🌿</span>
-                                <h3 class="font-serif text-lg text-brand-text font-medium">Tarjeta Práctica</h3>
-                            </div>
-                            <h4 class="font-serif text-sm text-brand-secondary font-medium">Roll-on Bienestar en Movimiento</h4>
-                            <p class="text-xs text-brand-muted leading-relaxed pt-1">
-                                Una mezcla simple para acompañar músculos tensos y momentos de sobrecarga física.
-                            </p>
+                    <div class="pt-6 border-t border-stone-200/60 space-y-4">
+                        <div class="text-center space-y-1">
+                            <h3 class="font-serif text-xl text-brand-text font-medium">✨ Recetas Aromáticas</h3>
+                            <p class="text-xs text-brand-muted">Pequeñas preparaciones para acompañar distintos momentos.</p>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 py-2 border-y border-stone-100">
-                            <div class="p-3 bg-brand-bg/60 rounded-xl space-y-0.5">
-                                <span class="text-xs font-semibold text-brand-text block">🧴 Base</span>
-                                <span class="text-xs text-brand-muted block">Árnica</span>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                            {/* TARJETA 1: ROLL-ON */}
+                            <div class="bg-white p-6 rounded-2xl border border-black/5 shadow-xs space-y-4 flex flex-col justify-between">
+                                <div class="space-y-2">
+                                    <div class="flex items-center space-x-1.5">
+                                        <span class="text-base">🌀</span>
+                                        <h4 class="font-serif text-base text-brand-text font-medium">Roll-on Bienestar en Movimiento</h4>
+                                    </div>
+                                    <p class="text-xs text-brand-muted leading-relaxed">
+                                        Una mezcla simple para acompañar músculos tensos y momentos de sobrecarga física.
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={() => toggleRecipe('rollon')}
+                                    class="w-full py-2.5 bg-brand-bg hover:bg-stone-200 text-brand-text text-xs font-medium rounded-xl border border-stone-200 transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+                                >
+                                    <span>{openRecipe === 'rollon' ? 'Ocultar receta ↑' : 'Ver receta →'}</span>
+                                </button>
+
+                                {openRecipe === 'rollon' && (
+                                    <div class="pt-4 border-t border-stone-100 space-y-5 fade-in">
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2 py-2 border-y border-stone-100">
+                                            <div class="p-3 bg-brand-bg/60 rounded-xl space-y-0.5">
+                                                <span class="text-xs font-semibold text-brand-text block">🧴 Base</span>
+                                                <span class="text-xs text-brand-muted block">Árnica</span>
+                                            </div>
+                                            <div class="p-3 bg-brand-bg/60 rounded-xl space-y-0.5">
+                                                <span class="text-xs font-semibold text-brand-text block">💚 Agregar</span>
+                                                <span class="text-xs text-brand-muted block">5 gotas de Enebro</span>
+                                            </div>
+                                            <div class="p-3 bg-brand-bg/60 rounded-xl space-y-0.5">
+                                                <span class="text-xs font-semibold text-brand-text block">✨ Opcional</span>
+                                                <span class="text-xs text-brand-muted block">2 gotas de Óleo 31</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <span class="text-xs font-semibold text-brand-text block">📍 Aplicar en</span>
+                                            <div class="grid grid-cols-2 gap-1.5 text-xs text-brand-muted">
+                                                <div class="flex items-center space-x-1.5"><span class="text-brand-primary">•</span><span>Cuello</span></div>
+                                                <div class="flex items-center space-x-1.5"><span class="text-brand-primary">•</span><span>Hombros</span></div>
+                                                <div class="flex items-center space-x-1.5"><span class="text-brand-primary">•</span><span>Espalda</span></div>
+                                                <div class="flex items-center space-x-1.5"><span class="text-brand-primary">•</span><span>Piernas cansadas</span></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-3 bg-stone-50 rounded-xl border border-stone-100">
+                                            <span class="text-xs font-semibold text-brand-text block">Tip de Dani</span>
+                                            <p class="text-xs text-brand-muted leading-relaxed mt-0.5">
+                                                Podés reutilizar un envase roll-on limpio (¡incluso uno de desodorante como suelo hacer yo!). Es una forma simple de tener siempre tu mezcla preparada para acompañarte durante el día.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                            <div class="p-3 bg-brand-bg/60 rounded-xl space-y-0.5">
-                                <span class="text-xs font-semibold text-brand-text block">💚 Agregar</span>
-                                <span class="text-xs text-brand-muted block">5 gotas de Enebro</span>
-                            </div>
-                            <div class="p-3 bg-brand-bg/60 rounded-xl space-y-0.5">
-                                <span class="text-xs font-semibold text-brand-text block">✨ Opcional</span>
-                                <span class="text-xs text-brand-muted block">2 gotas de Óleo 31</span>
+
+                            {/* TARJETA 2: BRUMA */}
+                            <div class="bg-white p-6 rounded-2xl border border-black/5 shadow-xs space-y-4 flex flex-col justify-between">
+                                <div class="space-y-2">
+                                    <div class="flex items-center space-x-1.5">
+                                        <span class="text-base">🌿</span>
+                                        <h4 class="font-serif text-base text-brand-text font-medium">Bruma de Relajación</h4>
+                                    </div>
+                                    <p class="text-xs text-brand-muted leading-relaxed">
+                                        Una preparación sencilla para acompañar momentos de calma, descanso y pausa.
+                                    </p>
+                                </div>
+
+                                <button
+                                    onClick={() => toggleRecipe('bruma')}
+                                    class="w-full py-2.5 bg-brand-bg hover:bg-stone-200 text-brand-text text-xs font-medium rounded-xl border border-stone-200 transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
+                                >
+                                    <span>{openRecipe === 'bruma' ? 'Ocultar receta ↑' : 'Ver receta →'}</span>
+                                </button>
+
+                                {openRecipe === 'bruma' && (
+                                    <div class="pt-4 border-t border-stone-100 space-y-5 fade-in">
+                                        <div class="py-2 border-y border-stone-100 space-y-2">
+                                            <span class="text-xs font-semibold text-brand-text block">Necesitás:</span>
+                                            <ul class="text-xs text-brand-muted space-y-1">
+                                                <div class="flex items-center space-x-1.5"><span class="text-brand-primary">•</span><span>10 ml de base para preparar brumas</span></div>
+                                                <div class="flex items-center space-x-1.5"><span class="text-brand-primary">•</span><span>3 gotas de Lavanda</span></div>
+                                                <div class="flex items-center space-x-1.5"><span class="text-brand-primary">•</span><span>3 gotas de Neroli</span></div>
+                                            </ul>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <span class="text-xs font-semibold text-brand-text block">Preparación:</span>
+                                            <ol class="text-xs text-brand-muted space-y-1">
+                                                <li>1. Colocá 10 ml de base para preparar brumas en un frasco con spray.</li>
+                                                <li>2. Agregá 3 gotas de Lavanda y 3 gotas de Neroli.</li>
+                                                <li>3. Mezclá suavemente.</li>
+                                                <li>4. ¡Lista para usar!</li>
+                                            </ol>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <span class="text-xs font-semibold text-brand-text block">Podés usarla:</span>
+                                            <div class="grid grid-cols-1 gap-1.5 text-xs text-brand-muted">
+                                                <div class="flex items-center space-x-1.5"><span class="text-brand-primary">•</span><span>Antes de una meditación.</span></div>
+                                                <div class="flex items-center space-x-1.5"><span class="text-brand-primary">•</span><span>Como parte de tu ritual de noche.</span></div>
+                                                <div class="flex items-center space-x-1.5"><span class="text-brand-primary">•</span><span>Durante una pausa.</span></div>
+                                                <div class="flex items-center space-x-1.5"><span class="text-brand-primary">•</span><span>Para acompañar un momento de descanso.</span></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-3 bg-brand-bg/60 rounded-xl space-y-0.5">
+                                            <span class="text-xs font-semibold text-brand-text block">✨ A tu gusto</span>
+                                            <p class="text-xs text-brand-muted leading-relaxed">
+                                                Podés variar la proporción entre Lavanda y Neroli según el aroma que prefieras, manteniendo 6 gotas totales por cada 10 ml de base.
+                                            </p>
+                                        </div>
+
+                                        <div class="p-3 bg-stone-50 rounded-xl border border-stone-100">
+                                            <span class="text-xs font-semibold text-brand-text block">Tip de Dani</span>
+                                            <p class="text-xs text-brand-muted leading-relaxed mt-0.5">
+                                                Yo uso la Bruma Aromablends de Swiss Just como base para preparar mis sprays aromáticos.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
-
-                        <div class="space-y-2">
-                            <span class="text-xs font-semibold text-brand-text block">📍 Aplicar en</span>
-                            <div class="grid grid-cols-2 gap-1.5 text-xs text-brand-muted">
-                                <div class="flex items-center space-x-1.5">
-                                    <span class="text-brand-primary">•</span>
-                                    <span>cuello</span>
-                                </div>
-                                <div class="flex items-center space-x-1.5">
-                                    <span class="text-brand-primary">•</span>
-                                    <span>hombros</span>
-                                </div>
-                                <div class="flex items-center space-x-1.5">
-                                    <span class="text-brand-primary">•</span>
-                                    <span>espalda</span>
-                                </div>
-                                <div class="flex items-center space-x-1.5">
-                                    <span class="text-brand-primary">•</span>
-                                    <span>piernas cansadas</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="p-3.5 bg-brand-bg/80 rounded-xl border border-stone-200/60 space-y-1">
-                            <span class="text-xs font-semibold text-brand-accent block">💡 Tip de Dani</span>
-                            <p class="text-xs text-brand-muted leading-relaxed">
-                                Podés reutilizar un envase roll-on limpio (¡incluso uno de desodorante como suelo hacer yo!). Es una forma simple de tener siempre tu mezcla preparada para acompañarte durante el día.
-                            </p>
-                        </div>
-
-                        <button
-                            type="button"
-                            class="w-full py-2.5 bg-brand-bg hover:bg-stone-200 text-brand-text text-xs font-medium rounded-xl border border-stone-200 transition-all cursor-pointer"
-                        >
-                            Guardar receta
-                        </button>
                     </div>
                 </div>
             );
